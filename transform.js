@@ -1,6 +1,5 @@
 let vertexShader = `
 attribute vec4 a_Position;
-
 uniform mat4 u_Transform;
 
 void main(){
@@ -9,8 +8,9 @@ void main(){
 
 var fragmentShader = `
 precision mediump float;
+uniform vec4 u_Color;
 void main(){
-  gl_FragColor = vec4(0.3, 0.0, 0.8, 1.0);
+  gl_FragColor = u_Color;
 }`;
 
 
@@ -29,6 +29,8 @@ window.onload = function(){
   // don't catch this error since any problem here is a programmer error
   var program = middUtils.initializeProgram(gl, vertexShader, fragmentShader);
 
+  var u_Color= gl.getUniformLocation(program, "u_Color");
+
   var u_Transform = gl.getUniformLocation(program, "u_Transform");
 
 
@@ -44,7 +46,7 @@ window.onload = function(){
 
   // grab a reference to the position attribute
   var a_Position = gl.getAttribLocation(program, "a_Position");
-
+  gl.enableVertexAttribArray(a_Position);
 
   var data = new Float32Array([
     0.0, 0.2,
@@ -58,8 +60,18 @@ window.onload = function(){
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
 
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
-  gl.enableVertexAttribArray(a_Position);
+
+  var axisData = new Float32Array([
+    0, 0,
+    0, 1,
+    0, 0,
+    1, 0
+  ]);
+
+  var axisBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
+
 
 
   // set the background or clear color
@@ -68,6 +80,17 @@ window.onload = function(){
   // clear the context for new content
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // tell the GPU to draw the point
+  gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
+  // tell the GPU to draw the axis
+  gl.drawArrays(gl.LINES, 0, 4);
+
+  gl.uniform4f(u_Color, 0.3, 0.0, 0.8, 1.0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
+
+  // tell the GPU to draw the triangle
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 };
