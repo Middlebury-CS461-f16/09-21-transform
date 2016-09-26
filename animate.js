@@ -64,18 +64,7 @@ var shear = new Float32Array([
     0, 0, 0, 1
   ]);
 
-  var angle = Math.PI /4;
-  var c = Math.cos(angle);
-  var s = Math.sin(angle);
 
-  var rotation = new Float32Array([
-    c,s, 0, 0,
-    -s, c, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  ]);
-
-  var transform = rotation;
 
   // grab a reference to the position attribute
   var a_Position = gl.getAttribLocation(program, "a_Position");
@@ -102,28 +91,57 @@ var shear = new Float32Array([
   ]);
 
   var axisBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
+
+  var angle = 0;
+  var last;
+  var tick = function(now){
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
+
+    var rotation = new Float32Array([
+      c,s, 0, 0,
+      -s, c, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ]);
+
+  var transform = rotation;
+
+  if (now && last){
+    var elapsed = now -last;
+    angle += (Math.PI/2) * elapsed/1000;
+    angle = angle > 2 * Math.PI ? angle - Math.PI *2 : angle;
+  }
+  last = now;
 
 
 
-  // set the background or clear color
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
 
-  // clear the context for new content
-  gl.clear(gl.COLOR_BUFFER_BIT);
+gl.uniformMatrix4fv(u_Transform, false, identity);
 
-  gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
+    // set the background or clear color
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
-  // tell the GPU to draw the axis
-  gl.drawArrays(gl.LINES, 0, 4);
+    // clear the context for new content
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-  gl.uniform4f(u_Color, 0.3, 0.0, 0.8, 1.0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
- gl.uniformMatrix4fv(u_Transform, false, transform);
-  // tell the GPU to draw the triangle
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
+    // tell the GPU to draw the axis
+    gl.drawArrays(gl.LINES, 0, 4);
+
+    gl.uniform4f(u_Color, 0.3, 0.0, 0.8, 1.0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
+    gl.uniformMatrix4fv(u_Transform, false, transform);
+    // tell the GPU to draw the triangle
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    requestAnimationFrame(tick);
+  };
+  tick();
 };
