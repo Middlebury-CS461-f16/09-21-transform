@@ -41,35 +41,13 @@ window.onload = function(){
     0, 0, 0, 1
   ]);
 
-  gl.uniformMatrix4fv(u_Transform, false, identity);
-
-var translate = new Float32Array([
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0.25, 0.5, 0, 1
-  ]);
-
-  var scale = new Float32Array([
-    2, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  ]);
-
-var shear = new Float32Array([
-    1, 1, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  ]);
-
 
 
   // grab a reference to the position attribute
   var a_Position = gl.getAttribLocation(program, "a_Position");
   gl.enableVertexAttribArray(a_Position);
 
+  // create triangle
   var data = new Float32Array([
     0.0, 0.2,
     0.1, -0.2,
@@ -77,12 +55,13 @@ var shear = new Float32Array([
   ]);
 
 
-  // load the data into a VBO
+  // load the triangle data into a VBO
   var buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
 
 
+  // create the axis
   var axisData = new Float32Array([
     0, 0,
     0, 1,
@@ -90,11 +69,18 @@ var shear = new Float32Array([
     1, 0
   ]);
 
+  // load the axis data into a VBO
   var axisBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
 
+
+  // setup the animation
   var angle = 0;
   var last;
   var tick = function(now){
+
+    // compute the current rotation matrix
     var c = Math.cos(angle);
     var s = Math.sin(angle);
 
@@ -105,21 +91,15 @@ var shear = new Float32Array([
       0, 0, 0, 1
     ]);
 
-  var transform = rotation;
+    var transform = rotation;
 
-  if (now && last){
-    var elapsed = now -last;
-    angle += (Math.PI/2) * elapsed/1000;
-    angle = angle > 2 * Math.PI ? angle - Math.PI *2 : angle;
-  }
-  last = now;
-
-
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
-
-gl.uniformMatrix4fv(u_Transform, false, identity);
+    // find the new angle based on the elapsed time
+    if (now && last){
+      var elapsed = now -last;
+      angle += (Math.PI/2) * elapsed/1000;
+      angle = angle > 2 * Math.PI ? angle - Math.PI *2 : angle;
+    }
+    last = now;
 
     // set the background or clear color
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -127,20 +107,25 @@ gl.uniformMatrix4fv(u_Transform, false, identity);
     // clear the context for new content
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
+    // load the identity into the transform
+    gl.uniformMatrix4fv(u_Transform, false, identity);
 
+    // draw the axis
+    gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
     gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
-    // tell the GPU to draw the axis
     gl.drawArrays(gl.LINES, 0, 4);
 
+    // switch to rotation matrix
+    gl.uniformMatrix4fv(u_Transform, false, transform);
+
+    // draw the triangle
     gl.uniform4f(u_Color, 0.3, 0.0, 0.8, 1.0);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
-    gl.uniformMatrix4fv(u_Transform, false, transform);
-    // tell the GPU to draw the triangle
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
+    // request another frame
     requestAnimationFrame(tick);
   };
   tick();
