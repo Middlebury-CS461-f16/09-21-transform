@@ -41,9 +41,9 @@ window.onload = function(){
     0, 0, 0, 1
   ]);
 
-  gl.uniformMatrix4fv(u_Transform, false, identity);
 
-var translate = new Float32Array([
+
+  var translate = new Float32Array([
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -57,7 +57,7 @@ var translate = new Float32Array([
     0, 0, 0, 1
   ]);
 
-var shear = new Float32Array([
+  var shear = new Float32Array([
     1, 1, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
@@ -106,24 +106,21 @@ var shear = new Float32Array([
   gl.bufferData(gl.ARRAY_BUFFER, axisData, gl.STATIC_DRAW);
 
 
+  // load the identity into the transform
+  gl.uniformMatrix4fv(u_Transform, false, identity);
 
-  // set the background or clear color
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-  // clear the context for new content
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
+  // draw the axis
   gl.uniform4f(u_Color, 0.0, 0.0, 0.0, 1.0);
-
   gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffer);
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
-  // tell the GPU to draw the axis
   gl.drawArrays(gl.LINES, 0, 4);
 
+  // switch to rotation matrix
+  gl.uniformMatrix4fv(u_Transform, false, transform);
+
+  // draw the triangle
   gl.uniform4f(u_Color, 0.3, 0.0, 0.8, 1.0);
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0 , 0);
- gl.uniformMatrix4fv(u_Transform, false, transform);
-  // tell the GPU to draw the triangle
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 };
